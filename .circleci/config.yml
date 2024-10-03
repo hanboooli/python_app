@@ -24,6 +24,6 @@ jobs:
 workflows:
  OIDC-with-AWS:
    jobs:
-     - python_app:
+     - aws-example:
          # must use a valid CircleCI context
          context: test
