@@ -26,4 +26,4 @@ workflows:
    jobs:
      - aws-example:
          # must use a valid CircleCI context
-         context: aws
+         context: test
