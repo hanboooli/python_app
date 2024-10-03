@@ -1,17 +1,29 @@
-version: 2.1
+version: '2.1'
 orbs:
-  python: circleci/python@2.1.1
+ # import CircleCI's aws-cli orb
+ aws-cli: circleci/aws-cli@3.1
 jobs:
-  build_and_test: # this can be any name you choose
-    executor: python/default # use the default executor defined within the orb
-    steps:
-      - checkout # checkout source code
-      - python/install-packages:
-          pkg-manager: pip
-      - run:
-          name: Run tests
-          command: python -m pytest
+ aws-example:
+   docker:
+     - image: cimg/aws:2022.06
+   steps:
+     - checkout
+     # run the aws-cli/setup command from the orb
+     - aws-cli/setup:
+         role-arn: 'arn:aws:iam::919512924188:role/circle_ec2_deployment'
+         aws-region: "us-west-2"
+         # optional parameters
+         profile-name: "OIDC-PROFILE"
+         role-session-name: “example-session”
+         session-duration: 1800
+     - run:
+         name: Log-into-AWS-ECR
+         command: |
+           # must use same profile specified in the step above       
+           aws ec2 describe-instances --profile "OIDC-PROFILE"
 workflows:
-  build_test_deploy:
-    jobs:
-      - build_and_test
+ OIDC-with-AWS:
+   jobs:
+     - aws-example:
+         # must use a valid CircleCI context
+         context: aws
