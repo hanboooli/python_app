@@ -25,7 +25,7 @@ jobs:
       - aws-oidc-setup:
           aws-role-arn: "arn:aws:iam::919512924188:role/circle_ec2_deployment"
       - run:
-          name: Test AWS connection
+          name: Test AWS connections
           command: aws s3 ls
 workflows:
   build_and_deploy:
