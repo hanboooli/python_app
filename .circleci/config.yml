@@ -38,8 +38,8 @@ jobs:
           role_arn: arn:aws:iam::919512924188:role/circle_ec2_deployment
           source_profile: default
       - run: >-
-          aws sts assume-role --role_arn
-          "arn:aws:iam::919512924188:role/circle_ec2_deployment" --role_session_name
+          aws sts assume-role --role-arn
+          "arn:aws:iam::919512924188:role/circle_ec2_deployment" --role-session-name
           AWSCLI-Session
 workflows:
   build_and_deploy:
