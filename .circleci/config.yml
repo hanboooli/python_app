@@ -1,34 +1,46 @@
 version: '2.1'
 orbs:
-  aws-cli: circleci/aws-cli@3.0.0
-commands:
-  aws-oidc-setup:
-    description: Setup AWS auth using OIDC token
-    parameters:
-      aws-role-arn:
-        type: string
-    steps:
-      - run:
-          name: Get short-term credentials
-          command: |
-            STS=($(aws sts assume-role-with-web-identity --role-arn << parameters.aws-role-arn >> --role-session-name "${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}" --web-identity-token "${CIRCLE_OIDC_TOKEN}" --duration-seconds 900 --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text))
-            echo "export AWS_ACCESS_KEY_ID=${STS[0]}" >> $BASH_ENV
-            echo "export AWS_SECRET_ACCESS_KEY=${STS[1]}" >> $BASH_ENV
-            echo "export AWS_SESSION_TOKEN=${STS[2]}" >> $BASH_ENV
-      - run:
-          name: Verify AWS credentials
-          command: aws sts get-caller-identity
+  aws-cli: circleci/aws-cli@5.0.0
+# commands:
+#   aws-oidc-setup:
+#     description: Setup AWS auth using OIDC token
+#     parameters:
+#       aws-role-arn:
+#         type: string
+#     steps:
+#       - run:
+#           name: Get short-term credentials
+#           command: |
+#             STS=($(aws sts assume-role-with-web-identity --role-arn << parameters.aws-role-arn >> --role-session-name "${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}" --web-identity-token "${CIRCLE_OIDC_TOKEN}" --duration-seconds 900 --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text))
+#             echo "export AWS_ACCESS_KEY_ID=${STS[0]}" >> $BASH_ENV
+#             echo "export AWS_SECRET_ACCESS_KEY=${STS[1]}" >> $BASH_ENV
+#             echo "export AWS_SESSION_TOKEN=${STS[2]}" >> $BASH_ENV
+#       - run:
+#           name: Verify AWS credentials
+#           command: aws sts get-caller-identity
 jobs:
   test:
     executor: aws-cli/default
+    # steps:
+    #   - checkout
+    #   - aws-cli/install
+    #   - aws-oidc-setup:
+    #       aws-role-arn: "arn:aws:iam::919512924188:role/circle_ec2_deployment"
+    #   - run:
+    #       name: Test AWS connections
+    #       command: aws s3 ls
     steps:
       - checkout
-      - aws-cli/install
-      - aws-oidc-setup:
-          aws-role-arn: "arn:aws:iam::919512924188:role/circle_ec2_deployment"
-      - run:
-          name: Test AWS connections
-          command: aws s3 ls
+      - aws-cli/setup:
+          profile_name: default
+      - aws-cli/role_arn_setup:
+          profile_name: new-profile
+          role_arn: arn:aws:iam::919512924188:role/circle_ec2_deployment
+          source_profile: default
+      - run: >-
+          aws sts assume-role --role_arn
+          "arn:aws:iam::919512924188:role/circle_ec2_deployment" --role_session_name
+          AWSCLI-Session
 workflows:
   build_and_deploy:
     jobs:
